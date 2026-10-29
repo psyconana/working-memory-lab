@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Working Memory Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same lab-notebook layout as Part I: station tabs across the top, one experiment "rig" at a time, each with a dark stimulus screen. */
+:root{
+  --bg:#F1F3EE; --surface:#FFFFFF; --ink:#17201B; --muted:#55605A; --line:#D4DAD1;
+  --accent:#0B6B63; --accent-ink:#FFFFFF; --signal:#C2410C; --soft:#E3EBE6;
+  --screen:#0D1115; --screen-ink:#EEF1F4; --screen-dim:#6E7884;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#1A1F1C; --ink:#E7ECE8; --muted:#9BA59F; --line:#2D3430;
+  --accent:#4BC3B4; --accent-ink:#06201D; --signal:#FF8C52; --soft:#232A26; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1A1F1C; --ink:#E7ECE8; --muted:#9BA59F; --line:#2D3430;
+  --accent:#4BC3B4; --accent-ink:#06201D; --signal:#FF8C52; --soft:#232A26; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:36px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+.eyebrow{font:600 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--muted);max-width:62ch;font-size:1.08rem}
+header.top{display:grid;gap:12px;margin-bottom:28px}
+
+nav.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.tab{font:600 .95rem/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:10px 16px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.tab .n{font:600 .75rem/1 var(--mono);color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab[aria-selected="true"] .n{color:var(--accent-ink);opacity:.8}
+button:focus-visible,input:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+
+section.exp{display:grid;gap:28px}
+.exp-head{display:grid;gap:10px}
+.exp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:28px;align-items:start}
+@media (max-width:820px){.exp-grid{grid-template-columns:minmax(0,1fr)}}
+.brief{display:grid;gap:14px;min-width:0}
+.brief ol,.brief ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+kbd{font:600 .8rem/1 var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:3px 6px;background:var(--surface);color:var(--ink)}
+.part{font:700 1.3rem/1.2 var(--display);padding-top:8px;border-top:1px solid var(--line)}
+
+.rig{display:grid;gap:12px;min-width:0}
+.stage{background:var(--screen);color:var(--screen-ink);border-radius:14px;min-height:clamp(270px,42vh,380px);
+  display:grid;place-items:center;padding:28px 20px;text-align:center;position:relative;overflow:hidden}
+.stage kbd{background:#1D242C;color:var(--screen-ink);border-color:#3A4450}
+.intro{display:grid;gap:12px;justify-items:center;max-width:42ch}
+.intro-title{font:700 1.4rem/1.2 var(--display)}
+.intro p{color:#C3CAD2}
+.go{font:700 1rem/1 var(--body);background:var(--screen-ink);color:var(--screen);border:0;border-radius:999px;padding:12px 26px;cursor:pointer;margin-top:6px}
+.fix{font:400 3rem/1 var(--mono);color:var(--screen-dim)}
+.sentence{font:400 clamp(1.15rem,3.4vw,1.6rem)/1.5 var(--body);max-width:30ch}
+.oops{font:600 1rem/1 var(--mono);color:#FF7A7A}
+.hint{position:absolute;bottom:14px;left:0;right:0;font:400 .8rem/1 var(--mono);color:var(--screen-dim)}
+
+/* Station 1: divided visual field */
+.vf-fix{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.vf-word{position:absolute;top:50%;transform:translate(-50%,-50%);font:700 clamp(1.3rem,3.6vw,1.9rem)/1 var(--mono);letter-spacing:.06em}
+
+/* Station 2: slips */
+.pair{font:600 clamp(1.6rem,5vw,2.4rem)/1.2 var(--mono);letter-spacing:.03em;color:#C3CAD2}
+.cue{display:grid;gap:14px;justify-items:center}
+.cue-label{font:700 .85rem/1 var(--mono);letter-spacing:.12em;color:#FFB37A}
+.cue-word{font:800 clamp(2rem,7vw,3.4rem)/1 var(--mono);letter-spacing:.03em;color:#FFD9B8}
+.judge{display:grid;gap:10px;justify-items:center;max-width:40ch}
+.judge .who{font:600 .8rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--screen-dim)}
+.judge .t{font:700 1.6rem/1.2 var(--mono)}
+.judge p{color:#C3CAD2}
+.err{display:grid;gap:16px;justify-items:center;max-width:40ch}
+.err .lab{font:600 .75rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--screen-dim)}
+.err .said{font:700 clamp(1.3rem,4vw,1.8rem)/1.25 var(--body);color:#FFD9B8}
+.err .meant{font:400 clamp(1.1rem,3.4vw,1.4rem)/1.25 var(--body);color:#C3CAD2}
+.fb{display:grid;gap:10px;max-width:44ch;text-align:left}
+.fb .verdict{font:700 1.2rem/1.2 var(--display)}
+.fb .verdict.ok{color:#5FE0A6}
+.fb .verdict.no{color:#FF9A9A}
+.fb p{color:#C3CAD2}
+
+/* Station 3: digit span */
+.digit{font:700 clamp(3.4rem,12vw,5.4rem)/1 var(--mono)}
+.span-form{display:grid;gap:14px;justify-items:center}
+.span-form input{font:700 1.8rem/1 var(--mono);letter-spacing:.2em;text-align:center;width:min(100%,14ch);
+  background:#1D242C;color:var(--screen-ink);border:1px solid #3A4450;border-radius:10px;padding:12px}
+.span-form label{color:#C3CAD2}
+.say{font:700 1rem/1.3 var(--mono);color:#FFB37A}
+
+/* Station 4: cases */
+.case{display:grid;gap:12px;max-width:50ch;text-align:left}
+.case .lab{font:600 .75rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--screen-dim)}
+.case blockquote{margin:0;font:400 clamp(1.02rem,2.8vw,1.18rem)/1.5 var(--body);font-style:italic;color:var(--screen-ink)}
+.case ul{margin:0;padding-left:1.1em;color:#C3CAD2;font-size:.95rem;display:grid;gap:4px}
+
+.pad{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.key{font:600 .95rem/1 var(--body);background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;flex:1 1 auto;justify-content:center}
+.key:active{transform:translateY(1px)}
+.prog{font:400 .82rem/1 var(--mono);color:var(--muted);min-height:1em}
+
+.results{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:18px}
+.empty{color:var(--muted);font-style:italic}
+.res-top{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:24px;align-items:center}
+@media (max-width:640px){.res-top{grid-template-columns:minmax(0,1fr)}}
+.effect{display:grid;gap:4px}
+.effect .label{font:600 .75rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.effect .num{font:800 2.6rem/1 var(--display);color:var(--signal);font-variant-numeric:tabular-nums}
+.effect .sub{color:var(--muted);font-size:.95rem}
+.bars{display:grid;gap:10px;min-width:0}
+.bar-row{display:grid;grid-template-columns:minmax(0,10rem) minmax(0,1fr) 4.5rem;gap:10px;align-items:center}
+@media (max-width:480px){.bar-row{grid-template-columns:minmax(0,1fr) 4.5rem}.bar-row .track{grid-column:1/-1;grid-row:2}}
+.bar-label{font-size:.92rem}
+.track{height:14px;background:var(--soft);border-radius:4px;overflow:hidden}
+.fill{display:block;height:100%;background:var(--accent);border-radius:4px}
+.fill.hi{background:var(--signal)}
+.bar-val{font:600 .9rem/1 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:.92rem;max-width:70ch}
+
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .75rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.num{font-family:var(--mono);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+mark{background:none;color:var(--signal);font-weight:700}
+
+details.explain{border-top:1px solid var(--line);padding-top:18px}
+details.explain summary{cursor:pointer;font:700 1.1rem/1.3 var(--display)}
+.explain-body{display:grid;gap:12px;margin-top:14px;max-width:68ch}
+.explain-body h3{margin-top:6px}
+.explain-body ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.cite{font-size:.88rem;color:var(--muted)}
+.next{justify-self:start;font:700 1rem/1 var(--body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 20px;cursor:pointer}
+.ext{justify-self:start;font:700 1rem/1 var(--body);color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:11px 18px;text-decoration:none}
+
+.basics{display:grid;gap:36px}
+.prose{display:grid;gap:12px;max-width:68ch}
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,15.5rem),1fr));gap:14px}
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:6px;align-content:start}
+.idea .tag{font:600 .72rem/1 var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.idea p{font-size:.95rem;color:var(--muted)}
+.logic{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font:600 .9rem/1.3 var(--mono)}
+.logic span{background:var(--soft);border-radius:8px;padding:8px 12px}
+.logic i{font-style:normal;color:var(--muted)}
+.sim{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:10px;justify-items:start}
+.sim a.url{color:var(--accent);font-weight:700;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">LING 300 · Psycholinguistics · Part II</p>
+    <h1>Working memory</h1>
+  </header>
+
+  <section class="exp" id="wm">
+    <div class="exp-head">
+      <p class="eyebrow">Miller 1956; Baddeley, Lewis &amp; Vallar 1984</p>
+      <h2>Working memory</h2>
+      <p class="lede">How many digits can you hold in mind? Then try again while your mouth is busy.</p>
+    </div>
+    <div class="exp-grid">
+      <div class="brief">
+        <h3>What you'll do</h3>
+        <ol><li>Digits appear one at a time.</li><li>When they stop, type them in order and press <kbd>Enter</kbd>.</li><li>The lists get longer until you miss two in a row at the same length.</li><li>Round 2 is the same, but you say "the, the, the" out loud the whole time.</li></ol>
+        <p class="note">About 5 minutes for both rounds. No writing the digits down or tapping them out!</p>
+      </div>
+      <div class="rig">
+        <div class="stage" id="wm-stage"></div>
+        <div class="pad" id="wm-pad"></div>
+        <div class="prog" id="wm-prog"></div>
+      </div>
+    </div>
+    <div class="results" id="wm-results"><p class="empty">Your results appear here after both rounds.</p></div>
+    <details class="explain">
+      <summary>What's going on (open after you finish)</summary>
+      <div class="explain-body">
+        <p><strong>Working memory</strong> is a small, short-term workspace that holds and works with information for a few seconds. George Miller (1956) put its span at about "seven, plus or minus two" items.</p>
+        <p>One part of working memory, the <strong>phonological loop</strong>, keeps words alive by silently repeating them with your inner voice. Saying "the, the, the" ties up your speech system, so the inner voice can't rehearse. This is called <strong>articulatory suppression</strong>, and it usually lowers span by one or two digits.</p>
+        <p>Language needs this workspace all the time. To understand <em>The dog that the cat chased ran away</em>, you have to hold <em>the dog</em> until <em>ran</em> arrives. While speaking, you plan the next words while still saying the current ones. When working memory is overloaded, people produce simpler sentences, pause more, and make more agreement errors.</p>
+        <h3>Discuss</h3>
+        <ul>
+          <li>Everyone did the quiet round first. Why is that a problem for comparing the two rounds? How would you fix it? (Think back to control conditions in Part I.)</li>
+          <li>Why might the horse sentence from last time (<em>The horse raced past the barn fell</em>) be harder for someone whose working memory is loaded?</li>
+          <li>Where does working memory fit in Levelt's model of speaking?</li>
+        </ul>
+        <p class="cite">Miller, G. A. (1956). The magical number seven, plus or minus two. <em>Psychological Review, 63</em>(2), 81–97. · Baddeley, A., Lewis, V., &amp; Vallar, G. (1984). Exploring the articulatory loop. <em>Quarterly Journal of Experimental Psychology, 36A</em>(2), 233–252.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="sim" aria-label="Aphasia simulator" style="margin-top:36px">
+    <h2>Aphasia Simulator</h2>
+    <a class="url" href="https://www.vohaphasia.org/simulation/" target="_blank" rel="noopener">https://www.vohaphasia.org/simulation/</a>
+  </section>
+</div>
+
+<script>
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let runId = 0, pending = null, activeRun = null;
+const $ = id => document.getElementById(id);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const paint = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const mean = xs => xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
+const ms = v => v == null ? 'n/a' : Math.round(v) + ' ms';
+const signed = v => v == null ? 'n/a' : (v >= 0 ? '+' : '−') + Math.abs(Math.round(v)) + ' ms';
+const pct = (n, d) => d ? Math.round(100 * n / d) : null;
+
+/* ---------- input ---------- */
+function getResponse(keymap) { return new Promise(res => { pending = { keymap, res }; }); }
+function respond(k) {
+  if (!pending || !(k in pending.keymap)) return false;
+  const p = pending; pending = null;
+  p.res({ value: p.keymap[k], t: performance.now() });
+  return true;
+}
+document.addEventListener('keydown', e => {
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches && e.target.matches('input')) return;
+  const k = e.key === ' ' ? 'space' : e.key.toLowerCase();
+  if (respond(k)) { e.preventDefault(); return; }
+  if (activeRun && k === 'space') e.preventDefault();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-key]');
+  if (b) { respond(b.dataset.key); b.blur(); return; }
+  const s = e.target.closest('[data-start]');
+  if (s) { s.blur(); runners[s.dataset.start](); return; }
+  const n = e.target.closest('[data-goto]');
+  if (n) { show(n.dataset.goto); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); return; }
+  const t = e.target.closest('.tab');
+  if (t) show(t.dataset.target);
+});
+
+/* ---------- stage helpers ---------- */
+const setStage = (n, html) => { $(n + '-stage').innerHTML = html; };
+const setProg = (n, txt) => { $(n + '-prog').textContent = txt; };
+function setPad(n, keys) {
+  $(n + '-pad').innerHTML = keys.map(k =>
+    `<button class="key" type="button" data-key="${k.key}"><kbd>${k.kbd}</kbd>${k.label}</button>`).join('');
+}
+function startScreen(n, title, body) {
+  setStage(n, `<div class="intro"><p class="intro-title">${title}</p>${body}<button class="go" type="button" data-start="${n}">Start</button></div>`);
+  setPad(n, []); setProg(n, '');
+}
+function begin(n) {
+  if (activeRun && activeRun !== n) { inits[activeRun](); $(activeRun + '-results').innerHTML = '<p class="empty">Run stopped. Start again when you are ready.</p>'; }
+  runId++; pending = null; activeRun = n;
+  $(n + '-results').innerHTML = '<p class="empty">Running. Results appear when you finish.</p>';
+  return runId;
+}
+function finish(n) {
+  activeRun = null; pending = null;
+  setPad(n, []); setProg(n, '');
+  setStage(n, `<div class="intro"><p class="intro-title">Done</p><p>Your results are below.</p><button class="go" type="button" data-start="${n}">Run it again</button></div>`);
+}
+function renderResults(n, { label, value, sub, bars = [], extra = '' }) {
+  const el = $(n + '-results');
+  const max = Math.max(1, ...bars.map(b => b.value || 0)) * 1.12;
+  const barsHtml = bars.length ? `<div class="bars">${bars.map(b => `
+      <div class="bar-row"><span class="bar-label">${b.label}</span>
+      <span class="track"><span class="fill ${b.hi ? 'hi' : ''}" style="width:${b.value ? (b.value / max * 100).toFixed(1) : 0}%"></span></span>
+      <span class="bar-val">${b.text ?? ms(b.value)}</span></div>`).join('')}</div>` : '';
+  el.innerHTML = `<div class="res-top"><div class="effect"><span class="label">${label}</span><span class="num">${value}</span><span class="sub">${sub}</span></div>${barsHtml}</div>${extra}`;
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+/* ---------- navigation ---------- */
+function show() {}
+
+/* ---------- 3. Digit span ---------- */
+const WM_START = 4, WM_MAX = 10;
+function initWM() { startScreen('wm', 'Remember the digits', '<p>Watch the digits, then type them in order and press <kbd>Enter</kbd>. Two rounds: quiet, then talking.</p>'); }
+function makeDigits(n) {
+  const out = [];
+  while (out.length < n) { const d = 1 + Math.floor(Math.random() * 9); if (d !== out[out.length - 1]) out.push(d); }
+  return out.join('');
+}
+function getTyped(n) {
+  return new Promise(res => {
+    setStage(n, `<form class="span-form" id="${n}-form"><label for="${n}-in">Type the digits in order</label>
+      <input id="${n}-in" inputmode="numeric" autocomplete="off" spellcheck="false"><button class="go" type="submit">Enter</button></form>`);
+    const f = $(n + '-form'), inp = $(n + '-in');
+    inp.focus();
+    f.addEventListener('submit', e => { e.preventDefault(); res(inp.value.replace(/\D/g, '')); });
+  });
+}
+async function spanBlock(id, round, suppress) {
+  let best = WM_START - 1;
+  for (let len = WM_START; len <= WM_MAX; len++) {
+    let right = 0;
+    for (let k = 0; k < 2; k++) {
+      setProg('wm', `Round ${round}: ${len} digits, try ${k + 1} of 2`);
+      setStage('wm', suppress ? '<p class="say">Keep saying "the, the, the"…</p>' : '<div class="fix">+</div>');
+      await wait(900);
+      if (id !== runId) return null;
+      const seq = makeDigits(len);
+      for (const d of seq) {
+        setStage('wm', `<div class="digit">${d}</div>`); await wait(800);
+        if (id !== runId) return null;
+        setStage('wm', ''); await wait(200);
+        if (id !== runId) return null;
+      }
+      const typed = await getTyped('wm');
+      if (id !== runId) return null;
+      const ok = typed === seq;
+      if (ok) right++;
+      setStage('wm', ok ? '<div class="intro-title" style="color:#5FE0A6">Correct</div>' : `<div class="oops">It was ${seq}</div>`);
+      await wait(900);
+      if (id !== runId) return null;
+    }
+    if (right === 0) break;
+    best = len;
+  }
+  return best;
+}
+async function runWM() {
+  const id = begin('wm');
+  setPad('wm', []);
+  const quiet = await spanBlock(id, 1, false);
+  if (quiet == null || id !== runId) return;
+  setProg('wm', 'Round 2');
+  setStage('wm', `<div class="intro"><p class="intro-title">Round 2: talk while you remember</p><p>Start saying <strong>"the, the, the"</strong> out loud, about twice a second. Keep going until you have typed each answer.</p><p>Press <kbd>Space</kbd> when you are already talking.</p></div>`);
+  setPad('wm', [{ key: 'space', kbd: 'Space', label: "I'm talking, start" }]);
+  const r = await getResponse({ space: 1 });
+  if (id !== runId || !r) return;
+  setPad('wm', []);
+  const supp = await spanBlock(id, 2, true);
+  if (supp == null || id !== runId) return;
+  finish('wm');
+  const drop = quiet - supp;
+  renderResults('wm', {
+    label: 'Your digit span', value: `${quiet} → ${supp}`,
+    sub: drop > 0 ? `Talking cost you ${drop} digit${drop === 1 ? '' : 's'}.` : drop === 0 ? 'No change. Some people chunk visually, or rehearse between "the"s.' : 'You did better while talking. Practice may have helped more than talking hurt.',
+    bars: [{ label: 'Quiet', value: quiet, text: `${quiet} digits` }, { label: 'Saying "the"', value: supp, text: `${supp} digits`, hi: true }],
+    extra: `<p class="note">Span is the longest list you got right at least once. Report both numbers to the class.</p>`
+  });
+}
+
+const runners = { wm: runWM };
+const inits = { wm: initWM };
+initWM();
+</script>
+</body>
+</html>
